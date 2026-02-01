@@ -4,6 +4,7 @@
 
 ## 🎯 Overview
 
-A lightweight security monitoring tool that analyzes system logs in real-time to detect suspicious patterns, failed authentication attempts, privilege escalations, and potential security threats. Built to explore concepts from endpoint detection and response (EDR) platforms like CrowdStrike Falcon.
+A cloud-native, distributed security monitoring pipeline that processes security events at scale. Built to explore endpoint detection and response (EDR) concepts similar to CrowdStrike Falcon's architecture.
 
+The system ingests security logs from multiple sources, processes them through a Kafka event stream, analyzes threats using Go-based microservices, and deploys on Kubernetes for high availability and scalability.
 
