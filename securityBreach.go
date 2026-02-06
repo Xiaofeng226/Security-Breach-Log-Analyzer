@@ -54,3 +54,39 @@ type ThreatDetector struct {
 	alertChan     chan ThreatAlert
 	wg            sync.WaitGroup
 }
+
+// NewThreatDetector creates a new threat detector instance
+func NewThreatDetector(kafkaBrokers []string, redisAddr string) *ThreatDetector {
+	ctx := context.Background()
+
+	// Kafka consumer (reads security events)
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     kafkaBrokers,
+		Topic:       "security-events",
+		GroupID:     "threat-detector-group",
+		MinBytes:    10e3, // 10KB
+		MaxBytes:    10e6, // 10MB
+		MaxWait:     500 * time.Millisecond,
+	})
+
+	// Kafka producer (publishes alerts)
+	writer := &kafka.Writer{
+		Addr:     kafka.TCP(kafkaBrokers...),
+		Topic:    "security-alerts",
+		Balancer: &kafka.LeastBytes{},
+	}
+
+	// Redis client (for state management)
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+		DB:   0,
+	})
+
+	return &ThreatDetector{
+		kafkaReader:   reader,
+		kafkaWriter:   writer,
+		redisClient:   redisClient,
+		ctx:           ctx,
+		alertChan:     make(chan ThreatAlert, 100),
+	}
+}
