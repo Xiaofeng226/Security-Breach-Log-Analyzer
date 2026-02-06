@@ -44,3 +44,13 @@ type ThreatAlert struct {
 	EventCount int       `json:"event_count"`
 	RawEvents  []string  `json:"raw_events"`
 }
+
+// ThreatDetector processes security events and detects threats
+type ThreatDetector struct {
+	kafkaReader   *kafka.Reader
+	kafkaWriter   *kafka.Writer
+	redisClient   *redis.Client
+	ctx           context.Context
+	alertChan     chan ThreatAlert
+	wg            sync.WaitGroup
+}
