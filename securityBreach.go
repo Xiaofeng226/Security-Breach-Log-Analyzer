@@ -230,3 +230,23 @@ func (td *ThreatDetector) isPrivilegeEscalation(event SecurityEvent) bool {
 
 	return false
 }
+
+// isSuspiciousUser detects suspicious user activity
+func (td *ThreatDetector) isSuspiciousUser(event SecurityEvent) bool {
+	// Check for invalid user login attempts
+	if strings.Contains(strings.ToLower(event.RawLog), "invalid user") {
+		key := fmt.Sprintf("invalid_user:%s", event.SourceIP)
+		
+		count, err := td.redisClient.Incr(td.ctx, key).Result()
+		if err != nil {
+			return false
+		}
+
+		td.redisClient.Expire(td.ctx, key, 5*time.Minute)
+		
+		// Threshold: 3 invalid users in 5 minutes
+		return count >= 3
+	}
+
+	return false
+}
