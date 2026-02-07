@@ -90,3 +90,20 @@ func NewThreatDetector(kafkaBrokers []string, redisAddr string) *ThreatDetector 
 		alertChan:     make(chan ThreatAlert, 100),
 	}
 }
+
+// Start begins processing security events
+func (td *ThreatDetector) Start(numWorkers int) {
+	log.Printf("Starting %d threat detector workers...", numWorkers)
+
+	// Start worker goroutines
+	for i := 0; i < numWorkers; i++ {
+		td.wg.Add(1)
+		go td.processEvents(i)
+	}
+
+	// Start alert publisher
+	td.wg.Add(1)
+	go td.publishAlerts()
+
+	log.Println("Threat detector started successfully")
+}
