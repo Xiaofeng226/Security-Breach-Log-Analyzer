@@ -164,4 +164,19 @@ func (td *ThreatDetector) detectThreats(event SecurityEvent) {
 			Details:    fmt.Sprintf("Privilege escalation attempt by %s", event.User),
 		}
 		td.alertChan <- alert
+	}
+
+	// 3. Check for suspicious user activity
+	if td.isSuspiciousUser(event) {
+		alert := ThreatAlert{
+			AlertID:    fmt.Sprintf("SU-%d", time.Now().Unix()),
+			Timestamp:  time.Now(),
+			Severity:   "HIGH",
+			ThreatType: "SUSPICIOUS_USER",
+			SourceIP:   event.SourceIP,
+			Details:    fmt.Sprintf("Invalid user login attempts from %s", event.SourceIP),
+		}
+		td.alertChan <- alert
+	}
+
 }
