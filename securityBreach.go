@@ -107,3 +107,33 @@ func (td *ThreatDetector) Start(numWorkers int) {
 
 	log.Println("Threat detector started successfully")
 }
+
+// processEvents reads events from Kafka and analyzes them
+func (td *ThreatDetector) processEvents(workerID int) {
+	defer td.wg.Done()
+
+	log.Printf("Worker %d started", workerID)
+
+	for {
+		// Read message from Kafka
+		msg, err := td.kafkaReader.ReadMessage(td.ctx)
+		if err != nil {
+			if err == context.Canceled {
+				log.Printf("Worker %d shutting down", workerID)
+				return
+			}
+			log.Printf("Worker %d error reading message: %v", workerID, err)
+			continue
+		}
+
+		// Parse event
+		var event SecurityEvent
+		if err := json.Unmarshal(msg.Value, &event); err != nil {
+			log.Printf("Worker %d error parsing event: %v", workerID, err)
+			continue
+		}
+
+		// Detect threats
+		td.detectThreats(event)
+	}
+}
