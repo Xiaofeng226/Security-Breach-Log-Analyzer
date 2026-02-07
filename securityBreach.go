@@ -204,3 +204,29 @@ func (td *ThreatDetector) isBruteForce(event SecurityEvent) bool {
 	// Threshold: 5 failed attempts in 5 minutes
 	return count >= 5
 }
+
+
+// isPrivilegeEscalation detects privilege escalation attempts
+func (td *ThreatDetector) isPrivilegeEscalation(event SecurityEvent) bool {
+	// Check for sudo commands or privilege changes
+	if strings.Contains(strings.ToLower(event.Action), "sudo") ||
+	   strings.Contains(strings.ToLower(event.EventType), "privilege") {
+		
+		// Check if targeting sensitive files/commands
+		sensitivePatterns := []string{
+			"/etc/shadow",
+			"/etc/passwd",
+			"/root",
+			"chmod 777",
+			"useradd",
+		}
+
+		for _, pattern := range sensitivePatterns {
+			if strings.Contains(strings.ToLower(event.RawLog), pattern) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
