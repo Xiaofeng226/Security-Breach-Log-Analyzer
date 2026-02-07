@@ -152,4 +152,16 @@ func (td *ThreatDetector) detectThreats(event SecurityEvent) {
 		}
 		td.alertChan <- alert
 	}
+
+	// 2. Check for privilege escalation
+	if td.isPrivilegeEscalation(event) {
+		alert := ThreatAlert{
+			AlertID:    fmt.Sprintf("PE-%d", time.Now().Unix()),
+			Timestamp:  time.Now(),
+			Severity:   "MEDIUM",
+			ThreatType: "PRIVILEGE_ESCALATION",
+			SourceIP:   event.SourceIP,
+			Details:    fmt.Sprintf("Privilege escalation attempt by %s", event.User),
+		}
+		td.alertChan <- alert
 }
