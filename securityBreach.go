@@ -180,3 +180,27 @@ func (td *ThreatDetector) detectThreats(event SecurityEvent) {
 	}
 
 }
+
+// isBruteForce detects brute force authentication attacks
+func (td *ThreatDetector) isBruteForce(event SecurityEvent) bool {
+	// Only check failed authentication events
+	if event.EventType != "authentication" || event.Result != "failed" {
+		return false
+	}
+
+	// Use Redis to track failed attempts per IP
+	key := fmt.Sprintf("failed_auth:%s", event.SourceIP)
+	
+	// Increment counter
+	count, err := td.redisClient.Incr(td.ctx, key).Result()
+	if err != nil {
+		log.Printf("Redis error: %v", err)
+		return false
+	}
+
+	// Set expiration (5 minute window)
+	td.redisClient.Expire(td.ctx, key, 5*time.Minute)
+
+	// Threshold: 5 failed attempts in 5 minutes
+	return count >= 5
+}
