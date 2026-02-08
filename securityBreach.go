@@ -250,3 +250,66 @@ func (td *ThreatDetector) isSuspiciousUser(event SecurityEvent) bool {
 
 	return false
 }
+
+
+// publishAlerts publishes detected threats to Kafka
+func (td *ThreatDetector) publishAlerts() {
+	defer td.wg.Done()
+
+	for alert := range td.alertChan {
+		// Serialize alert
+		alertJSON, err := json.Marshal(alert)
+		if err != nil {
+			log.Printf("Error marshaling alert: %v", err)
+			continue
+		}
+
+		// Publish to Kafka
+		err = td.kafkaWriter.WriteMessages(td.ctx, kafka.Message{
+			Key:   []byte(alert.SourceIP),
+			Value: alertJSON,
+		})
+
+		if err != nil {
+			log.Printf("Error publishing alert: %v", err)
+			continue
+		}
+
+		log.Printf("🚨 ALERT: %s - %s from %s", 
+			alert.Severity, alert.ThreatType, alert.SourceIP)
+	}
+}
+
+// Shutdown gracefully shuts down the detector
+func (td *ThreatDetector) Shutdown() {
+	log.Println("Shutting down threat detector...")
+
+	close(td.alertChan)
+	td.kafkaReader.Close()
+	td.kafkaWriter.Close()
+	td.redisClient.Close()
+
+	td.wg.Wait()
+	log.Println("Threat detector shut down successfully")
+}
+
+func main() {
+	// Configuration (normally from env vars or config file)
+	kafkaBrokers := []string{"localhost:9092"}
+	redisAddr := "localhost:6379"
+	numWorkers := 5
+
+	// Create detector
+	detector := NewThreatDetector(kafkaBrokers, redisAddr)
+
+	// Start processing
+	detector.Start(numWorkers)
+
+	// Wait for interrupt signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	<-sigChan
+
+	// Graceful shutdown
+	detector.Shutdown()
+}
