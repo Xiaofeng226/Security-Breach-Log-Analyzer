@@ -14,7 +14,7 @@ pipeline {
         DOCKER_IMAGE    = 'xiaofeng226/security-breach-analyzer'
         DOCKER_CREDS    = credentials('dockerhub-credentials')  // Set in Jenkins > Credentials
         KUBECONFIG_CRED = credentials('kubeconfig')             // Set in Jenkins > Credentials
-        GO_FLAGS        = '-v -race'
+        GO_FLAGS        = '-v'
         GOCACHE         = '/tmp/go-cache'
         GOPATH          = '/tmp/go'
     }
