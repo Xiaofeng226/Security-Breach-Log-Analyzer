@@ -110,22 +110,34 @@ pipeline {
             }
             steps {
                 script {
+                    // Install kubectl (not present in golang:1.21-alpine)
+                    sh 'apk add --no-cache kubectl'
+
                     // Write the kubeconfig from Jenkins credentials
                     writeFile file: 'kubeconfig.yaml', text: KUBECONFIG_CRED
 
-                    sh '''
+                    sh """
                         export KUBECONFIG=kubeconfig.yaml
+
+                        # Create namespace if it doesn't exist
+                        kubectl create namespace security-pipeline --dry-run=client -o yaml | kubectl apply -f -
+
+                        # Create or update the deployment
+                        kubectl create deployment threat-detector \
+                            --image=${env.IMAGE_TAG} \
+                            --namespace security-pipeline \
+                            --dry-run=client -o yaml | kubectl apply -f -
 
                         # Roll out the new image
                         kubectl set image deployment/threat-detector \
-                            threat-detector=${IMAGE_TAG} \
+                            threat-detector=${env.IMAGE_TAG} \
                             --namespace security-pipeline
 
                         # Block until rollout completes (or times out after 2 min)
                         kubectl rollout status deployment/threat-detector \
                             --namespace security-pipeline \
                             --timeout=120s
-                    '''
+                    """
                 }
             }
             post {
@@ -135,7 +147,7 @@ pipeline {
                         export KUBECONFIG=kubeconfig.yaml
                         echo "Deployment failed — rolling back..."
                         kubectl rollout undo deployment/threat-detector \
-                            --namespace security-pipeline
+                            --namespace security-pipeline || true
                     '''
                 }
                 always {
