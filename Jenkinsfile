@@ -114,7 +114,8 @@ pipeline {
                     sh 'apk add --no-cache kubectl'
 
                     // Write the kubeconfig from Jenkins credentials
-                    writeFile file: 'kubeconfig.yaml', text: KUBECONFIG_CRED
+                    // Use printenv via shell to avoid Groovy string quoting issues
+                    sh 'printenv KUBECONFIG_CRED > kubeconfig.yaml'
 
                     sh """
                         export KUBECONFIG=kubeconfig.yaml
