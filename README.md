@@ -2,7 +2,7 @@
 
 **Real-time security event streaming and analysis system built with Go, Kafka, and Kubernetes**
 
-[![CI](https://github.com/Xiaofeng226/Security-Breach-Log-Analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/Xiaofeng226/Security-Breach-Log-Analyzer/actions/workflows/ci.yml)
+[![Jenkins](https://img.shields.io/badge/Jenkins-CI%2FCD-D24939.svg?logo=jenkins)](https://www.jenkins.io/)
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8.svg)](https://golang.org/)
 [![Kafka](https://img.shields.io/badge/Kafka-3.0+-231F20.svg)](https://kafka.apache.org/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28+-326CE5.svg)](https://kubernetes.io/)
@@ -116,7 +116,7 @@ All services deployed on Kubernetes with:
 | **Orchestration** | Kubernetes 1.28+ | Container orchestration and scaling |
 | **Containerization** | Docker 24.0+ | Service packaging and isolation |
 | **Monitoring** | Prometheus + Grafana | Metrics collection and visualization |
-| **CI/CD** | GitHub Actions | Automated build, test, and deployment |
+| **CI/CD** | Jenkins | Automated build, test, and deployment |
 
 ## 📦 Project Structure
 
