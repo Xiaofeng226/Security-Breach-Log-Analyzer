@@ -113,12 +113,10 @@ pipeline {
                     // Install kubectl (not present in golang:1.21-alpine)
                     sh 'apk add --no-cache kubectl'
 
-                    // Write the kubeconfig from Jenkins credentials
-                    // Use printenv via shell to avoid Groovy string quoting issues
-                    sh 'printenv KUBECONFIG_CRED > kubeconfig.yaml'
-
+                    // KUBECONFIG_CRED is a Secret File credential — Jenkins writes it to
+                    // a temp path and sets the env var to that path automatically
                     sh """
-                        export KUBECONFIG=kubeconfig.yaml
+                        export KUBECONFIG=\$KUBECONFIG_CRED
 
                         # Create namespace if it doesn't exist
                         kubectl create namespace security-pipeline --dry-run=client -o yaml | kubectl apply -f -
@@ -144,16 +142,16 @@ pipeline {
             post {
                 failure {
                     // Auto-rollback if the deployment fails
-                    sh '''
-                        export KUBECONFIG=kubeconfig.yaml
+                    sh """
+                        export KUBECONFIG=\$KUBECONFIG_CRED
                         echo "Deployment failed — rolling back..."
                         kubectl rollout undo deployment/threat-detector \
                             --namespace security-pipeline || true
-                    '''
+                    """
                 }
                 always {
-                    // Never leave kubeconfig sitting on disk
-                    sh 'rm -f kubeconfig.yaml'
+                    // kubeconfig is managed by Jenkins Secret File — no cleanup needed
+                    echo 'Deploy stage complete'
                 }
             }
         }
