@@ -16,6 +16,17 @@ The system ingests security logs from multiple sources, processes them through a
 
 **Processes 10,000+ security events per second** with sub-100ms latency.
 
+## 📸 Demo
+
+### CI/CD Pipeline (Jenkins)
+![Jenkins Pipeline](screenshots/jenkins-pipeline.png)
+
+### Real-time Threat Detection
+![Threat Alerts](screenshots/threat-detection.png)
+
+### Running Services
+![Docker Services](screenshots/docker-services.png)
+
 ## 🏗️ Architecture
 
 ```
@@ -154,32 +165,37 @@ All services deployed on Kubernetes with:
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker 24.0+
-- Kubernetes cluster (minikube for local)
-- kubectl configured
-- Go 1.21+ (for development)
+- [Docker](https://www.docker.com/get-started) 24.0+
+- [Docker Compose](https://docs.docker.com/compose/) (included with Docker Desktop)
+- Go 1.21+ (optional — only needed for local development without Docker)
 
-### Local Development (Docker Compose)
+### Run Locally (2 minutes)
 
 ```bash
-# Clone repository
-git clone https://github.com/Xiaofeng226/distributed-security-pipeline.git
-cd distributed-security-pipeline
+# 1. Clone the repo
+git clone https://github.com/Xiaofeng226/Security-Breach-Log-Analyzer.git
+cd Security-Breach-Log-Analyzer
 
-# Start all services locally
+# 2. Start all services (Kafka, Redis, detectors)
 docker-compose up -d
 
-# Check service health
+# 3. Verify everything is running
 docker-compose ps
 
-# View logs
+# 4. Send test security events
+./scripts/send-test-events.sh
+
+# 5. Watch threat alerts in real time
 docker-compose logs -f threat-detector
 
-# Send test events
-./scripts/generate-test-events.sh
+# 6. View Grafana dashboard
+open http://localhost:3000   # login: admin / admin
+```
 
-# View dashboard
-open http://localhost:3000  # Grafana (admin/admin)
+### Stop
+
+```bash
+docker-compose down
 ```
 
 ### Production Deployment (Kubernetes)
