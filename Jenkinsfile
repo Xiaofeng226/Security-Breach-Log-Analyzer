@@ -81,6 +81,9 @@ pipeline {
             }
             steps {
                 script {
+                    // Install Docker CLI (not present in golang:1.21-alpine)
+                    sh 'apk add --no-cache docker-cli'
+
                     def shortSha = GIT_COMMIT.take(7)
                     def imageTag = "${DOCKER_IMAGE}:sha-${shortSha}"
                     def latestTag = "${DOCKER_IMAGE}:latest"
