@@ -15,6 +15,8 @@ pipeline {
         DOCKER_CREDS    = credentials('dockerhub-credentials')  // Set in Jenkins > Credentials
         KUBECONFIG_CRED = credentials('kubeconfig')             // Set in Jenkins > Credentials
         GO_FLAGS        = '-v -race'
+        GOCACHE         = '/tmp/go-cache'
+        GOPATH          = '/tmp/go'
     }
 
     // Trigger a build on every push to GitHub
