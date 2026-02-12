@@ -128,8 +128,9 @@ pipeline {
                             --dry-run=client -o yaml | kubectl apply -f -
 
                         # Roll out the new image
+                        # Container name comes from the image name (security-breach-analyzer)
                         kubectl set image deployment/threat-detector \
-                            threat-detector=${env.IMAGE_TAG} \
+                            security-breach-analyzer=${env.IMAGE_TAG} \
                             --namespace security-pipeline
 
                         # Block until rollout completes (or times out after 2 min)
