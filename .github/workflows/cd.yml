@@ -1,0 +1,61 @@
+# CD Pipeline - Deploys to Kubernetes after CI passes on main
+# Requires KUBECONFIG secret to be set in GitHub repository settings
+
+name: CD
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]        # Triggers after the CI workflow completes
+    types: [ completed ]
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    # Only deploy if CI passed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        # KUBECONFIG secret must be added in GitHub Settings > Secrets
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Set image tag
+        id: tag
+        run: echo "IMAGE_TAG=sha-$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Deploy threat-detector
+        run: |
+          kubectl set image deployment/threat-detector \
+            threat-detector=xiaofeng226/security-breach-analyzer:${{ steps.tag.outputs.IMAGE_TAG }} \
+            --namespace security-pipeline
+
+      - name: Wait for rollout to complete
+        run: |
+          kubectl rollout status deployment/threat-detector \
+            --namespace security-pipeline \
+            --timeout=120s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods --namespace security-pipeline \
+            -l app=threat-detector
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Deployment failed! Rolling back..."
+          kubectl rollout undo deployment/threat-detector \
+            --namespace security-pipeline
